@@ -3,172 +3,138 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
-  ScrollView,
+  Dimensions,
   Animated,
   StatusBar,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface Props {
   onFinish: () => void;
 }
 
-const slides = [
-  {
-    id: '1',
-    icon: '🛺',
-    title: 'Book a Ride\nAnytime',
-    subtitle: 'Hanapin ang pinakamalapit na\ntricycle sa iyong lokasyon.',
-    accent: Colors.secondary,
-    bg: Colors.backgroundLight,
-    iconBg: Colors.primary,
-  },
-  {
-    id: '2',
-    icon: '📍',
-    title: 'Real-Time\nTracking',
-    subtitle: 'Subaybayan ang iyong driver\nsa mapa nang live.',
-    accent: Colors.primaryLight,
-    bg: '#EBF5FB',
-    iconBg: Colors.secondary,
-  },
-  {
-    id: '3',
-    icon: '⭐',
-    title: 'Safe &\nAffordable',
-    subtitle: 'Ang ligtas at abot-kayang\nsakay para sa lahat.',
-    accent: Colors.primary,
-    bg: Colors.backgroundLight,
-    iconBg: Colors.primaryDark,
-  },
-];
+export default function LoginScreen({ onFinish }: Props) {
+  const [phone, setPhone] = useState('');
+  const [focused, setFocused] = useState(false);
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslate = useRef(new Animated.Value(30)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
 
-export default function OnboardingScreen({ onFinish }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(1)).current;
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 70,
+        friction: 8,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-  const handleNext = () => {
-    if (activeIndex < slides.length - 1) {
-      const next = activeIndex + 1;
-      scrollRef.current?.scrollTo({ x: next * width, animated: true });
-      setActiveIndex(next);
-    } else {
-      onFinish();
-    }
-  };
-
-  const pressIn = () =>
-    Animated.spring(buttonScale, { toValue: 0.95, useNativeDriver: true }).start();
-  const pressOut = () =>
-    Animated.spring(buttonScale, { toValue: 1, useNativeDriver: true }).start();
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(formTranslate, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 350,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 200);
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
 
-      {/* Skip */}
-      <TouchableOpacity style={styles.skipBtn} onPress={onFinish}>
-        <Text style={styles.skipText}>Preskip</Text>
-      </TouchableOpacity>
-
-      {/* Slides */}
-      <Animated.ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        scrollEnabled={false}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-          useNativeDriver: false,
-        })}
-        scrollEventThrottle={16}
-      >
-        {slides.map((slide, index) => (
-          <View key={slide.id} style={[styles.slide, { backgroundColor: slide.bg }]}>
-            {/* Decorative circles */}
-            <View style={[styles.decorCircleLarge, { backgroundColor: slide.accent + '15' }]} />
-            <View style={[styles.decorCircleSmall, { backgroundColor: slide.accent + '20' }]} />
-
-            {/* Icon card */}
-            <View style={styles.iconWrapper}>
-              <View style={[styles.iconCardOuter, Shadows.lg]}>
-                <View style={[styles.iconCardInner, { backgroundColor: slide.iconBg }]}>
-                  <Text style={styles.slideIcon}>{slide.icon}</Text>
-                </View>
-              </View>
-              {/* Floating badge */}
-              <View style={[styles.floatingBadge, { backgroundColor: slide.accent }]}>
-                <Text style={styles.floatingBadgeText}>{index + 1}/3</Text>
-              </View>
-            </View>
-
-            {/* Text */}
-            <View style={styles.textBlock}>
-              <Text style={styles.slideTitle}>{slide.title}</Text>
-              <Text style={styles.slideSubtitle}>{slide.subtitle}</Text>
-              <View style={[styles.accentLine, { backgroundColor: slide.accent }]} />
-            </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Animated.View
+          style={[styles.logoBox, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}
+        >
+          <View style={[styles.logoCard, Shadows.lg]}>
+            <Text style={styles.logoIcon}>🚌</Text>
           </View>
-        ))}
-      </Animated.ScrollView>
+          <Text style={styles.brandName}>
+            Sakay<Text style={styles.brandAccent}>Na</Text>
+          </Text>
+          <Text style={styles.brandSub}>Ang iyong maaasahang sakay</Text>
+        </Animated.View>
+      </View>
 
-      {/* Bottom controls */}
-      <View style={styles.bottomContainer}>
-        {/* Dots */}
-        <View style={styles.dots}>
-          {slides.map((_, i) => {
-            const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-            const dotWidth = scrollX.interpolate({
-              inputRange,
-              outputRange: [8, 28, 8],
-              extrapolate: 'clamp',
-            });
-            const dotOpacity = scrollX.interpolate({
-              inputRange,
-              outputRange: [0.4, 1, 0.4],
-              extrapolate: 'clamp',
-            });
-            return (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.dot,
-                  { width: dotWidth, opacity: dotOpacity, backgroundColor: Colors.primary },
-                ]}
-              />
-            );
-          })}
+      {/* Form */}
+      <Animated.View
+        style={[
+          styles.formCard,
+          Shadows.md,
+          { opacity: formOpacity, transform: [{ translateY: formTranslate }] },
+        ]}
+      >
+        <Text style={styles.formTitle}>Mag-login</Text>
+        <Text style={styles.formSub}>Ilagay ang iyong phone number para makapasok.</Text>
+
+        <View style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}>
+          <Text style={styles.inputPrefix}>+63</Text>
+          <View style={styles.inputDivider} />
+          <TextInput
+            style={styles.input}
+            placeholder="9XX XXX XXXX"
+            placeholderTextColor={Colors.gray400}
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={phone}
+            onChangeText={setPhone}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            selectionColor={Colors.primary}
+          />
         </View>
 
-        {/* CTA Button */}
-        <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-          <TouchableOpacity
-            style={styles.ctaButton}
-            onPress={handleNext}
-            onPressIn={pressIn}
-            onPressOut={pressOut}
-            activeOpacity={1}
-          >
-            <Text style={styles.ctaText}>
-              {activeIndex < slides.length - 1 ? 'Susunod →' : 'Magsimula'}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Login link */}
-        <TouchableOpacity onPress={onFinish} style={styles.loginLink}>
-          <Text style={styles.loginLinkText}>
-            May account na? <Text style={styles.loginLinkBold}>Mag-login</Text>
-          </Text>
+        <TouchableOpacity
+          style={[styles.loginBtn, !phone && styles.loginBtnDisabled, Shadows.md]}
+          onPress={phone.length >= 10 ? onFinish : undefined}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.loginBtnText}>Magpatuloy</Text>
+          <Text style={styles.loginBtnArrow}>→</Text>
         </TouchableOpacity>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>o</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity style={styles.guestBtn} onPress={onFinish}>
+          <Text style={styles.guestBtnText}>Magpatuloy bilang Bisita</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          Sa pag-login, sumasang-ayon ka sa aming Terms of Service
+        </Text>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -176,156 +142,145 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundLight,
-  },
-  skipBtn: {
-    position: 'absolute',
-    top: 56,
-    right: Spacing.lg,
-    zIndex: 10,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: 'rgba(27,79,138,0.08)',
-    borderRadius: BorderRadius.full,
-  },
-  skipText: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.gray500,
-    fontWeight: Typography.fontWeights.medium,
-  },
-  slide: {
-    width,
-    flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingTop: 80,
-    overflow: 'hidden',
+    paddingHorizontal: Spacing.lg,
   },
-  decorCircleLarge: {
-    position: 'absolute',
-    width: width * 1.1,
-    height: width * 1.1,
-    borderRadius: width * 0.55,
-    top: -width * 0.4,
-    alignSelf: 'center',
-  },
-  decorCircleSmall: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    bottom: 80,
-    right: -60,
-  },
-  iconWrapper: {
-    position: 'relative',
+  header: {
+    alignItems: 'center',
     marginBottom: Spacing['2xl'],
   },
-  iconCardOuter: {
-    width: 160,
-    height: 160,
-    borderRadius: 40,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconCardInner: {
-    width: 128,
-    height: 128,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slideIcon: {
-    fontSize: 64,
-  },
-  floatingBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: Colors.white,
-  },
-  floatingBadgeText: {
-    fontSize: 10,
-    color: Colors.white,
-    fontWeight: Typography.fontWeights.bold,
-  },
-  textBlock: {
+  logoBox: {
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  slideTitle: {
+  logoCard: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+  logoIcon: {
+    fontSize: 40,
+  },
+  brandName: {
     fontSize: Typography.fontSizes['3xl'],
     fontWeight: Typography.fontWeights.extrabold,
     color: Colors.primaryDark,
-    textAlign: 'center',
-    lineHeight: Typography.fontSizes['3xl'] * 1.2,
     letterSpacing: -0.5,
   },
-  slideSubtitle: {
-    fontSize: Typography.fontSizes.md,
+  brandAccent: {
+    color: Colors.secondary,
+  },
+  brandSub: {
+    fontSize: Typography.fontSizes.sm,
     color: Colors.gray500,
-    textAlign: 'center',
-    lineHeight: Typography.fontSizes.md * 1.6,
     marginTop: Spacing.xs,
   },
-  accentLine: {
-    width: 48,
-    height: 4,
-    borderRadius: 2,
-    marginTop: Spacing.md,
-  },
-  bottomContainer: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: 48,
-    paddingTop: Spacing.lg,
-    alignItems: 'center',
-    gap: Spacing.md,
+  formCard: {
     backgroundColor: Colors.white,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    ...Shadows.md,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
-  dots: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    alignItems: 'center',
+  formTitle: {
+    fontSize: Typography.fontSizes.xl,
+    fontWeight: Typography.fontWeights.bold,
+    color: Colors.primaryDark,
+  },
+  formSub: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.gray500,
     marginBottom: Spacing.sm,
   },
-  dot: {
-    height: 8,
-    borderRadius: 4,
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.gray200,
+    borderRadius: BorderRadius.md,
+    height: 52,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.gray100,
   },
-  ctaButton: {
-    width: width - Spacing.xl * 2,
-    height: 56,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
+  inputWrapperFocused: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.white,
+  },
+  inputPrefix: {
+    fontSize: Typography.fontSizes.md,
+    fontWeight: Typography.fontWeights.semibold,
+    color: Colors.primaryDark,
+  },
+  inputDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: Colors.gray200,
+    marginHorizontal: Spacing.sm,
+  },
+  input: {
+    flex: 1,
+    fontSize: Typography.fontSizes.md,
+    color: Colors.gray700,
+    fontWeight: Typography.fontWeights.medium,
+  },
+  loginBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.md,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    height: 52,
+    gap: Spacing.sm,
   },
-  ctaText: {
+  loginBtnDisabled: {
+    backgroundColor: Colors.gray300,
+  },
+  loginBtnText: {
     fontSize: Typography.fontSizes.lg,
     fontWeight: Typography.fontWeights.bold,
     color: Colors.white,
-    letterSpacing: 0.3,
   },
-  loginLink: {
-    paddingVertical: Spacing.xs,
+  loginBtnArrow: {
+    fontSize: Typography.fontSizes.lg,
+    color: Colors.white,
   },
-  loginLinkText: {
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.gray200,
+  },
+  dividerText: {
     fontSize: Typography.fontSizes.sm,
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
-  loginLinkBold: {
-    color: Colors.primary,
+  guestBtn: {
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: Colors.gray200,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestBtnText: {
+    fontSize: Typography.fontSizes.md,
     fontWeight: Typography.fontWeights.semibold,
+    color: Colors.gray600,
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+  },
+  footerText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.gray400,
+    textAlign: 'center',
   },
 });

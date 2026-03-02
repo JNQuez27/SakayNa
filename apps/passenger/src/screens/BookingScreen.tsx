@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,68 +8,72 @@ import {
   Animated,
   StatusBar,
   ScrollView,
-  TextInput,
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
+import type { JeepneyRoute } from '../data/routes';
+import LeafletMap, { LeafletMapRef, MapRoute, MapMarker } from '../components/LeafletMap';
 
 const { width, height } = Dimensions.get('window');
 
 interface Props {
-  onConfirm?: () => void;
+  route: JeepneyRoute;
+  onTrack?: () => void;
   onBack?: () => void;
 }
 
-const rideTypes = [
-  {
-    id: 'regular',
-    name: 'Regular',
-    icon: '🛺',
-    desc: '1–3 pasahero',
-    eta: '3 min',
-    fare: '₱35–₱50',
-    recommended: false,
-  },
-  {
-    id: 'padyak',
-    name: 'Padyak',
-    icon: '🚲',
-    desc: '1 pasahero',
-    eta: '5 min',
-    fare: '₱20–₱30',
-    recommended: false,
-  },
-  {
-    id: 'express',
-    name: 'Express',
-    icon: '⚡',
-    desc: '1–2 pasahero',
-    eta: '2 min',
-    fare: '₱55–₱75',
-    recommended: true,
-  },
-];
-
-export default function BookingScreen({ onConfirm, onBack }: Props) {
-  const [selectedRide, setSelectedRide] = useState('express');
-  const [pickup, setPickup] = useState('Ang iyong kasalukuyang lokasyon');
-  const [dropoff, setDropoff] = useState('');
+export default function BookingScreen({ route, onTrack, onBack }: Props) {
   const slideUp = useRef(new Animated.Value(80)).current;
   const slideOpacity = useRef(new Animated.Value(0)).current;
   const confirmScale = useRef(new Animated.Value(1)).current;
+  const leafletRef = useRef<LeafletMapRef>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.parallel([
-      Animated.spring(slideUp, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }),
-      Animated.timing(slideOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.spring(slideUp, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }),
+      Animated.timing(slideOpacity, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
     ]).start();
+
+    // Fit map to route
+    setTimeout(() => {
+      if (leafletRef.current && route.coordinates.length > 0) {
+        leafletRef.current.fitBounds(route.coordinates);
+      }
+    }, 800);
   }, []);
 
   const pressIn = () =>
-    Animated.spring(confirmScale, { toValue: 0.97, useNativeDriver: true }).start();
+    Animated.spring(confirmScale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+    }).start();
   const pressOut = () =>
-    Animated.spring(confirmScale, { toValue: 1, useNativeDriver: true }).start();
+    Animated.spring(confirmScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
 
-  const selected = rideTypes.find((r) => r.id === selectedRide)!;
+  const midIdx = Math.floor(route.coordinates.length / 2);
+
+  const mapRoutes: MapRoute[] = [
+    { id: route.id, coordinates: route.coordinates, color: route.color, width: 5 },
+  ];
+
+  const mapMarkers: MapMarker[] = route.stops.map((stop, idx) => ({
+    id: `stop-${idx}`,
+    latitude: stop.latitude,
+    longitude: stop.longitude,
+    title: stop.name,
+    color: idx === 0 ? Colors.success : idx === route.stops.length - 1 ? Colors.error : route.color,
+  }));
 
   return (
     <View style={styles.container}>
@@ -77,166 +81,123 @@ export default function BookingScreen({ onConfirm, onBack }: Props) {
 
       {/* Map header */}
       <View style={styles.mapArea}>
-        <View style={styles.mapBg}>
-          <View style={styles.mapOverlay} />
-          <View style={[styles.roadH, { top: '30%' }]} />
-          <View style={[styles.roadH, { top: '60%' }]} />
-          <View style={[styles.roadV, { left: '30%' }]} />
-          <View style={[styles.roadV, { left: '65%' }]} />
-
-          {/* Route line simulation */}
-          <View style={styles.routeLine} />
-
-          {/* Origin pin */}
-          <View style={[styles.pin, styles.originPin]}>
-            <View style={styles.originDot} />
-          </View>
-
-          {/* Destination pin */}
-          {dropoff ? (
-            <View style={[styles.pin, styles.destPin]}>
-              <View style={styles.destDot} />
-              <View style={styles.destPinTail} />
-            </View>
-          ) : null}
-        </View>
+        <LeafletMap
+          ref={leafletRef}
+          center={route.coordinates[midIdx]}
+          zoom={14}
+          routes={mapRoutes}
+          markers={mapMarkers}
+        />
 
         {/* Back button */}
-        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+        <TouchableOpacity style={[styles.backBtn, Shadows.md]} onPress={onBack}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
       </View>
 
       {/* Bottom panel */}
       <Animated.View
-        style={[styles.panel, { opacity: slideOpacity, transform: [{ translateY: slideUp }] }]}
+        style={[
+          styles.panel,
+          {
+            opacity: slideOpacity,
+            transform: [{ translateY: slideUp }],
+          },
+        ]}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: Spacing.lg, paddingBottom: Spacing.xl }}
+          contentContainerStyle={{
+            gap: Spacing.lg,
+            paddingBottom: Spacing.xl,
+          }}
         >
-          {/* Location inputs */}
-          <View style={[styles.locationCard, Shadows.sm]}>
-            <View style={styles.locationRow}>
-              <View style={styles.locDotGreen} />
-              <TextInput
-                style={styles.locationInput}
-                value={pickup}
-                onChangeText={setPickup}
-                placeholder="Pickup location"
-                placeholderTextColor={Colors.gray400}
-                selectionColor={Colors.primary}
-              />
+          {/* Route header */}
+          <View style={styles.routeHeader}>
+            <View style={[styles.routeCodeBadge, { backgroundColor: route.color + '20' }]}>
+              <Text style={[styles.routeCode, { color: route.color }]}>{route.code}</Text>
             </View>
-            <View style={styles.locationDivider}>
-              <View style={styles.locationLine} />
-            </View>
-            <View style={styles.locationRow}>
-              <View style={styles.locDotRed} />
-              <TextInput
-                style={[styles.locationInput, !dropoff && styles.locationInputEmpty]}
-                value={dropoff}
-                onChangeText={setDropoff}
-                placeholder="Saan ka pupunta?"
-                placeholderTextColor={Colors.gray400}
-                selectionColor={Colors.primary}
-                autoFocus
-              />
-              {dropoff ? (
-                <TouchableOpacity onPress={() => setDropoff('')}>
-                  <Text style={styles.clearIcon}>✕</Text>
-                </TouchableOpacity>
-              ) : null}
+            <View style={styles.routeHeaderText}>
+              <Text style={styles.routeTitle}>{route.name}</Text>
+              <Text style={styles.routeDesc}>{route.description}</Text>
             </View>
           </View>
 
-          {/* Ride type selector */}
-          <View>
-            <Text style={styles.sectionLabel}>Piliin ang Sasakyan</Text>
-            <View style={styles.rideRow}>
-              {rideTypes.map((ride) => (
-                <TouchableOpacity
-                  key={ride.id}
-                  style={[
-                    styles.rideCard,
-                    selectedRide === ride.id && styles.rideCardSelected,
-                    Shadows.sm,
-                  ]}
-                  onPress={() => setSelectedRide(ride.id)}
-                >
-                  {ride.recommended && (
-                    <View style={styles.recommendedBadge}>
-                      <Text style={styles.recommendedText}>Best</Text>
-                    </View>
+          {/* Route info */}
+          <View style={[styles.infoCard, Shadows.sm]}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoIcon}>🕐</Text>
+              <Text style={styles.infoLabel}>Dalas</Text>
+              <Text style={styles.infoValue}>{route.frequency}</Text>
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={styles.infoItem}>
+              <Text style={styles.infoIcon}>📍</Text>
+              <Text style={styles.infoLabel}>Mga Hintayan</Text>
+              <Text style={styles.infoValue}>{route.stops.length}</Text>
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={styles.infoItem}>
+              <Text style={styles.infoIcon}>🚌</Text>
+              <Text style={styles.infoLabel}>Status</Text>
+              <Text style={[styles.infoValue, { color: Colors.success }]}>Aktibo</Text>
+            </View>
+          </View>
+
+          {/* Stops list */}
+          <View style={[styles.stopsCard, Shadows.sm]}>
+            <Text style={styles.stopsTitle}>Mga Hintayan ng Ruta</Text>
+            {route.stops.map((stop, idx) => (
+              <View key={`stop-list-${idx}`} style={styles.stopRow}>
+                <View style={styles.stopLeft}>
+                  <View
+                    style={[
+                      styles.stopDot,
+                      idx === 0 && {
+                        backgroundColor: Colors.success,
+                      },
+                      idx === route.stops.length - 1 && {
+                        backgroundColor: Colors.error,
+                      },
+                      idx > 0 &&
+                        idx < route.stops.length - 1 && {
+                          backgroundColor: route.color,
+                        },
+                    ]}
+                  />
+                  {idx < route.stops.length - 1 && (
+                    <View style={[styles.stopLine, { backgroundColor: route.color + '40' }]} />
                   )}
-                  <Text style={styles.rideIcon}>{ride.icon}</Text>
-                  <Text
-                    style={[styles.rideName, selectedRide === ride.id && styles.rideNameSelected]}
-                  >
-                    {ride.name}
+                </View>
+                <View style={styles.stopInfo}>
+                  <Text style={styles.stopName}>{stop.name}</Text>
+                  <Text style={styles.stopType}>
+                    {idx === 0
+                      ? 'Simula ng Ruta'
+                      : idx === route.stops.length - 1
+                        ? 'Dulo ng Ruta'
+                        : 'Hintayan'}
                   </Text>
-                  <Text style={styles.rideDesc}>{ride.desc}</Text>
-                  <View style={styles.rideEtaBadge}>
-                    <Text style={styles.rideEta}>{ride.eta}</Text>
-                  </View>
-                  <Text
-                    style={[styles.rideFare, selectedRide === ride.id && styles.rideFareSelected]}
-                  >
-                    {ride.fare}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+              </View>
+            ))}
           </View>
 
-          {/* Fare breakdown */}
-          <View style={[styles.fareCard, Shadows.sm]}>
-            <Text style={styles.sectionLabel}>Detalye ng Bayad</Text>
-            <View style={styles.fareRow}>
-              <Text style={styles.fareLabel}>Base fare</Text>
-              <Text style={styles.fareValue}>₱25.00</Text>
-            </View>
-            <View style={styles.fareRow}>
-              <Text style={styles.fareLabel}>Distansya (2.3 km)</Text>
-              <Text style={styles.fareValue}>₱18.40</Text>
-            </View>
-            <View style={styles.fareRow}>
-              <Text style={styles.fareLabel}>Convenience fee</Text>
-              <Text style={styles.fareValue}>₱5.00</Text>
-            </View>
-            <View style={[styles.fareRow, styles.fareTotalRow]}>
-              <Text style={styles.fareTotalLabel}>Kabuuan</Text>
-              <Text style={styles.fareTotalValue}>₱48.40</Text>
-            </View>
-          </View>
-
-          {/* Payment method */}
-          <TouchableOpacity style={[styles.paymentRow, Shadows.sm]}>
-            <Text style={styles.paymentIcon}>💵</Text>
-            <View style={styles.paymentInfo}>
-              <Text style={styles.paymentLabel}>Cash</Text>
-              <Text style={styles.paymentSub}>Bayad sa driver</Text>
-            </View>
-            <Text style={styles.paymentChevron}>›</Text>
-          </TouchableOpacity>
-
-          {/* Confirm button */}
+          {/* Track button */}
           <Animated.View style={{ transform: [{ scale: confirmScale }] }}>
             <TouchableOpacity
-              style={[styles.confirmBtn, !dropoff && styles.confirmBtnDisabled, Shadows.lg]}
-              onPress={dropoff ? onConfirm : undefined}
+              style={[styles.trackBtn, Shadows.lg]}
+              onPress={onTrack}
               onPressIn={pressIn}
               onPressOut={pressOut}
               activeOpacity={1}
             >
               <View>
-                <Text style={styles.confirmBtnTitle}>Kumpirmahin ang Booking</Text>
-                <Text style={styles.confirmBtnSub}>
-                  ETA: {selected.eta} • {selected.fare}
-                </Text>
+                <Text style={styles.trackBtnTitle}>Subaybayan ang Jeepney</Text>
+                <Text style={styles.trackBtnSub}>Real-time tracking sa mapa</Text>
               </View>
-              <View style={styles.confirmArrow}>
-                <Text style={styles.confirmArrowText}>→</Text>
+              <View style={styles.trackBtnArrow}>
+                <Text style={styles.trackBtnArrowText}>→</Text>
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -252,75 +213,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
   },
   mapArea: {
-    height: height * 0.28,
+    height: height * 0.35,
     position: 'relative',
     backgroundColor: Colors.primary,
-  },
-  mapBg: {
-    flex: 1,
-    backgroundColor: '#D6EAF8',
-    overflow: 'hidden',
-  },
-  mapOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(232,244,253,0.6)',
-  },
-  roadH: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 10,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  roadV: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 10,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  routeLine: {
-    position: 'absolute',
-    top: '28%',
-    left: '28%',
-    width: 130,
-    height: 3,
-    backgroundColor: Colors.primary,
-    transform: [{ rotate: '15deg' }],
-    borderRadius: 2,
-  },
-  pin: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  originPin: {
-    top: '22%',
-    left: '26%',
-  },
-  destPin: {
-    top: '30%',
-    left: '62%',
-  },
-  originDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.primary,
-    borderWidth: 3,
-    borderColor: Colors.white,
-  },
-  destDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: Colors.error,
-    borderWidth: 2,
-    borderColor: Colors.white,
-  },
-  destPinTail: {
-    width: 2,
-    height: 8,
-    backgroundColor: Colors.error,
   },
   backBtn: {
     position: 'absolute',
@@ -332,7 +227,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.md,
   },
   backIcon: {
     fontSize: Typography.fontSizes.xl,
@@ -349,213 +243,121 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     ...Shadows.lg,
   },
-  locationCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.gray200,
-  },
-  locationRow: {
+  routeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    gap: Spacing.md,
   },
-  locDotGreen: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.success,
-    borderWidth: 2,
-    borderColor: Colors.white,
-    shadowColor: Colors.success,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
+  routeCodeBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  locDotRed: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.error,
-    borderWidth: 2,
-    borderColor: Colors.white,
-    shadowColor: Colors.error,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
+  routeCode: {
+    fontSize: Typography.fontSizes.lg,
+    fontWeight: Typography.fontWeights.extrabold,
   },
-  locationInput: {
+  routeHeaderText: {
     flex: 1,
-    fontSize: Typography.fontSizes.md,
-    color: Colors.gray700,
-    fontWeight: Typography.fontWeights.medium,
-    paddingVertical: 4,
+    gap: 2,
   },
-  locationInputEmpty: {
-    color: Colors.gray400,
-  },
-  locationDivider: {
-    paddingLeft: 5,
-    paddingVertical: 2,
-  },
-  locationLine: {
-    width: 2,
-    height: 16,
-    backgroundColor: Colors.gray200,
-    borderStyle: 'dashed',
-    marginLeft: 1,
-  },
-  clearIcon: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.gray400,
-    padding: Spacing.xs,
-  },
-  sectionLabel: {
-    fontSize: Typography.fontSizes.md,
-    fontWeight: Typography.fontWeights.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.sm,
-  },
-  rideRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  rideCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.gray200,
-    gap: 4,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  rideCardSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.overlayLight,
-  },
-  recommendedBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: Colors.secondary,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderBottomLeftRadius: BorderRadius.sm,
-  },
-  recommendedText: {
-    fontSize: 9,
-    fontWeight: Typography.fontWeights.bold,
-    color: Colors.primaryDark,
-    textTransform: 'uppercase',
-  },
-  rideIcon: {
-    fontSize: 28,
-    marginTop: 8,
-  },
-  rideName: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: Typography.fontWeights.bold,
-    color: Colors.gray600,
-  },
-  rideNameSelected: {
-    color: Colors.primary,
-  },
-  rideDesc: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.gray400,
-  },
-  rideEtaBadge: {
-    backgroundColor: Colors.gray100,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-    marginTop: 2,
-  },
-  rideEta: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.gray500,
-    fontWeight: Typography.fontWeights.medium,
-  },
-  rideFare: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: Typography.fontWeights.bold,
-    color: Colors.gray600,
-    marginTop: 2,
-  },
-  rideFareSelected: {
-    color: Colors.primary,
-  },
-  fareCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.gray200,
-    gap: Spacing.sm,
-  },
-  fareRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  fareLabel: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.gray500,
-  },
-  fareValue: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.gray700,
-    fontWeight: Typography.fontWeights.medium,
-  },
-  fareTotalRow: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray200,
-    paddingTop: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  fareTotalLabel: {
-    fontSize: Typography.fontSizes.md,
-    fontWeight: Typography.fontWeights.bold,
-    color: Colors.primaryDark,
-  },
-  fareTotalValue: {
+  routeTitle: {
     fontSize: Typography.fontSizes.xl,
     fontWeight: Typography.fontWeights.extrabold,
-    color: Colors.primary,
+    color: Colors.primaryDark,
+    letterSpacing: -0.3,
   },
-  paymentRow: {
+  routeDesc: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.gray500,
+  },
+  infoCard: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.gray200,
-    gap: Spacing.sm,
   },
-  paymentIcon: { fontSize: 24 },
-  paymentInfo: { flex: 1 },
-  paymentLabel: {
+  infoItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  infoIcon: { fontSize: 20 },
+  infoLabel: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.gray400,
+    fontWeight: Typography.fontWeights.medium,
+  },
+  infoValue: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: Typography.fontWeights.bold,
+    color: Colors.primaryDark,
+  },
+  infoDivider: {
+    width: 1,
+    backgroundColor: Colors.gray200,
+    marginVertical: Spacing.xs,
+  },
+  stopsCard: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+  },
+  stopsTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: Typography.fontWeights.bold,
+    color: Colors.gray500,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.md,
+  },
+  stopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+  },
+  stopLeft: {
+    alignItems: 'center',
+    width: 20,
+  },
+  stopDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: Colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  stopLine: {
+    width: 2,
+    height: 28,
+    marginVertical: 2,
+  },
+  stopInfo: {
+    flex: 1,
+    paddingBottom: Spacing.sm,
+  },
+  stopName: {
     fontSize: Typography.fontSizes.md,
     fontWeight: Typography.fontWeights.semibold,
     color: Colors.primaryDark,
   },
-  paymentSub: {
+  stopType: {
     fontSize: Typography.fontSizes.xs,
     color: Colors.gray400,
+    marginTop: 1,
   },
-  paymentChevron: {
-    fontSize: Typography.fontSizes.xl,
-    color: Colors.gray400,
-  },
-  confirmBtn: {
+  trackBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -564,20 +366,17 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
-  confirmBtnDisabled: {
-    backgroundColor: Colors.gray300,
-  },
-  confirmBtnTitle: {
+  trackBtnTitle: {
     fontSize: Typography.fontSizes.lg,
     fontWeight: Typography.fontWeights.bold,
     color: Colors.white,
   },
-  confirmBtnSub: {
+  trackBtnSub: {
     fontSize: Typography.fontSizes.xs,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
-  confirmArrow: {
+  trackBtnArrow: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -585,7 +384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  confirmArrowText: {
+  trackBtnArrowText: {
     fontSize: Typography.fontSizes.xl,
     fontWeight: Typography.fontWeights.bold,
     color: Colors.primaryDark,

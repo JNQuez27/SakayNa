@@ -1,6 +1,42 @@
 # SakayNa Project
 
+Our mission is to modernize Davao City’s jeepney network through real-time data connectivity empowering commuters with reliable arrival information and equipping drivers with demand insights, ensuring faster trips, safer travel, and increased daily earnings.
+
+Features for the app
+
+1. Startup Economics: Pricing & Revenue
+SakayNa! operates on a two-sided freemium model. Both the passenger app and the driver app are free to download, with optional premium upgrades available for power users. This removes all adoption barriers while creating multiple revenue streams that grow with the user base. Revenue is also generated independently from cooperative fleet subscriptions and hyperlocal business advertising meaning the platform earns even when individual users remain on the free tier.
+
+Included Modules
+
+For Drivers
+Free Tier (Basic)
+Real-time nearby passenger view (limited stops ahead)
+Basic route tracking (current road position only)
+Paid Tier (Premium)
+Full passenger heatmap across entire route
+High-demand area alerts
+Weekly route profitability analytics
+Optional Add-ons
+Route history reports
+
+For Passengers
+Free Tier (Core)
+Select jeepney route
+Real-time jeepney tracking on live map
+Anonymous location sharing to driver heatmap
+Basic push notifications when a jeepney is approaching
+Premium Tier (Optional)
+Ad-free experience
+Priority notifications (jeepney 2–3 minutes away)
+Save multiple favorite stops/routes
+Predictive passenger flow analytics
+
+
+
 ## Workspace Structure
+
+
 
 ```
 SakayNa/

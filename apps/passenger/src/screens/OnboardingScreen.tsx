@@ -20,9 +20,10 @@ interface Props {
 const slides = [
   {
     id: '1',
-    icon: '🛺',
-    title: 'Book a Ride\nAnytime',
-    subtitle: 'Hanapin ang pinakamalapit na\ntricycle sa iyong lokasyon.',
+    icon: '�',
+    title: 'Piliin ang\nRuta',
+    subtitle: 'Piliin ang ruta ng jeepney\nna gusto mong sakyan.',
+
     accent: Colors.secondary,
     bg: Colors.backgroundLight,
     iconBg: Colors.primary,
@@ -31,7 +32,7 @@ const slides = [
     id: '2',
     icon: '📍',
     title: 'Real-Time\nTracking',
-    subtitle: 'Subaybayan ang iyong driver\nsa mapa nang live.',
+    subtitle: 'Subaybayan ang jeepney\nsa mapa nang live.',
     accent: Colors.primaryLight,
     bg: '#EBF5FB',
     iconBg: Colors.secondary,
@@ -74,7 +75,7 @@ export default function OnboardingScreen({ onFinish }: Props) {
 
       {/* Skip */}
       <TouchableOpacity style={styles.skipBtn} onPress={onFinish}>
-        <Text style={styles.skipText}>Preskip</Text>
+        <Text style={styles.skipText}>Laktawan</Text>
       </TouchableOpacity>
 
       {/* Slides */}

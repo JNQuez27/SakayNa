@@ -8,6 +8,9 @@
     "forceConsistentCasingInFileNames": true
   },
   "references": [
-    { "path": "./backend" }
-  ]
+    {
+      "path": "./backend"
+    }
+  ],
+  "extends": "expo/tsconfig.base"
 }

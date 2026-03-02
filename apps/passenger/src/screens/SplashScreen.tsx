@@ -1,12 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, StatusBar } from 'react-native';
 import { Colors, Typography, Spacing } from '../theme';
 
 const { width, height } = Dimensions.get('window');
@@ -29,9 +22,24 @@ export default function SplashScreen({ onFinish }: Props) {
     Animated.sequence([
       // Waves ripple
       Animated.stagger(180, [
-        Animated.spring(wave1Scale, { toValue: 1, useNativeDriver: true, tension: 60, friction: 8 }),
-        Animated.spring(wave2Scale, { toValue: 1, useNativeDriver: true, tension: 60, friction: 8 }),
-        Animated.spring(wave3Scale, { toValue: 1, useNativeDriver: true, tension: 60, friction: 8 }),
+        Animated.spring(wave1Scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 60,
+          friction: 8,
+        }),
+        Animated.spring(wave2Scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 60,
+          friction: 8,
+        }),
+        Animated.spring(wave3Scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 60,
+          friction: 8,
+        }),
       ]),
     ]).start();
 
@@ -47,15 +55,22 @@ export default function SplashScreen({ onFinish }: Props) {
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(taglineOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.spring(taglineTranslate, { toValue: 0, useNativeDriver: true, tension: 70, friction: 9 }),
+        Animated.spring(taglineTranslate, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 70,
+          friction: 9,
+        }),
       ]).start();
     }, 700);
 
     // Exit fade
     setTimeout(() => {
-      Animated.timing(exitOpacity, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => {
-        onFinish();
-      });
+      Animated.timing(exitOpacity, { toValue: 0, duration: 500, useNativeDriver: true }).start(
+        () => {
+          onFinish();
+        },
+      );
     }, 2400);
   }, []);
 
@@ -64,31 +79,72 @@ export default function SplashScreen({ onFinish }: Props) {
       <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
 
       {/* Ripple waves */}
-      <Animated.View style={[styles.wave, styles.wave3, { transform: [{ scale: wave3Scale }], opacity: wave3Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.1] }) }]} />
-      <Animated.View style={[styles.wave, styles.wave2, { transform: [{ scale: wave2Scale }], opacity: wave2Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] }) }]} />
-      <Animated.View style={[styles.wave, styles.wave1, { transform: [{ scale: wave1Scale }], opacity: wave1Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.28] }) }]} />
+      <Animated.View
+        style={[
+          styles.wave,
+          styles.wave3,
+          {
+            transform: [{ scale: wave3Scale }],
+            opacity: wave3Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.1] }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.wave,
+          styles.wave2,
+          {
+            transform: [{ scale: wave2Scale }],
+            opacity: wave2Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.wave,
+          styles.wave1,
+          {
+            transform: [{ scale: wave1Scale }],
+            opacity: wave1Scale.interpolate({ inputRange: [0, 1], outputRange: [0, 0.28] }),
+          },
+        ]}
+      />
 
       <Animated.View style={[styles.content, { opacity: exitOpacity }]}>
         {/* Logo mark */}
-        <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }], opacity: logoOpacity }]}>
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            { transform: [{ scale: logoScale }], opacity: logoOpacity },
+          ]}
+        >
           <View style={styles.logoOuter}>
             <View style={styles.logoInner}>
               {/* Tricycle icon using shapes */}
-              <Text style={styles.logoIcon}>🛺</Text>
+              <Text style={styles.logoIcon}>�</Text>
             </View>
           </View>
           <View style={styles.logoAccent} />
         </Animated.View>
 
         {/* Brand name */}
-        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }}>
+        <Animated.View
+          style={{
+            opacity: logoOpacity,
+            transform: [
+              { scale: logoScale.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) },
+            ],
+          }}
+        >
           <Text style={styles.brandName}>
             Sakay<Text style={styles.brandAccent}>Na</Text>
           </Text>
         </Animated.View>
 
         {/* Tagline */}
-        <Animated.View style={{ opacity: taglineOpacity, transform: [{ translateY: taglineTranslate }] }}>
+        <Animated.View
+          style={{ opacity: taglineOpacity, transform: [{ translateY: taglineTranslate }] }}
+        >
           <Text style={styles.tagline}>Ang iyong maaasahang sakay</Text>
           <View style={styles.taglineDivider} />
         </Animated.View>
