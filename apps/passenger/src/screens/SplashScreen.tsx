@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing } from '../theme';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function SplashScreen({ onFinish }: Props) {
+  const { t } = useLanguage();
   const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
@@ -121,7 +124,7 @@ export default function SplashScreen({ onFinish }: Props) {
           <View style={styles.logoOuter}>
             <View style={styles.logoInner}>
               {/* Tricycle icon using shapes */}
-              <Text style={styles.logoIcon}>�</Text>
+              <Ionicons name="bus" size={44} color={Colors.primary} />
             </View>
           </View>
           <View style={styles.logoAccent} />
@@ -145,7 +148,7 @@ export default function SplashScreen({ onFinish }: Props) {
         <Animated.View
           style={{ opacity: taglineOpacity, transform: [{ translateY: taglineTranslate }] }}
         >
-          <Text style={styles.tagline}>Ang iyong maaasahang sakay</Text>
+          <Text style={styles.tagline}>{t('splash_tagline')}</Text>
           <View style={styles.taglineDivider} />
         </Animated.View>
       </Animated.View>

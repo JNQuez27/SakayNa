@@ -10,22 +10,24 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface Props {
   onBack?: () => void;
 }
 
 export default function SettingsScreen({ onBack }: Props) {
+  const { t, language, setLanguage } = useLanguage();
   const [notifications, setNotifications] = useState(true);
   const [liveTracking, setLiveTracking] = useState(true);
   const [autoCenter, setAutoCenter] = useState(true);
   const [showAllRoutes, setShowAllRoutes] = useState(true);
   const [darkMap, setDarkMap] = useState(false);
-  const [tagalog, setTagalog] = useState(true);
 
   const showInfo = (title: string, message: string) => {
-    Alert.alert(title, message, [{ text: 'OK' }]);
+    Alert.alert(title, message, [{ text: t('settings_ok') }]);
   };
 
   return (
@@ -35,9 +37,9 @@ export default function SettingsScreen({ onBack }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-          <Text style={styles.backIcon}>{'<'}</Text>
+          <Ionicons name="arrow-back" size={20} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{t('settings_title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -47,16 +49,19 @@ export default function SettingsScreen({ onBack }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* ---- Map & Navigation ---- */}
-        <Text style={styles.sectionLabel}>MAP & NAVIGATION</Text>
+        <Text style={styles.sectionLabel}>{t('settings_map_nav')}</Text>
         <View style={[styles.card, Shadows.sm]}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>📍</Text>
+              <Ionicons
+                name="locate-outline"
+                size={20}
+                color={Colors.primary}
+                style={styles.settingIconBox}
+              />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Auto-Center on Location</Text>
-                <Text style={styles.settingDesc}>
-                  Automatically center the map on your current location when the app starts
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_auto_center')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_auto_center_desc')}</Text>
               </View>
             </View>
             <Switch
@@ -69,12 +74,15 @@ export default function SettingsScreen({ onBack }: Props) {
           <View style={styles.divider} />
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>🗺️</Text>
+              <Ionicons
+                name="map-outline"
+                size={20}
+                color={Colors.primary}
+                style={styles.settingIconBox}
+              />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Show All Routes on Map</Text>
-                <Text style={styles.settingDesc}>
-                  Display all jeepney routes on the home map. Turn off to reduce clutter
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_show_routes')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_show_routes_desc')}</Text>
               </View>
             </View>
             <Switch
@@ -87,12 +95,15 @@ export default function SettingsScreen({ onBack }: Props) {
           <View style={styles.divider} />
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>🌙</Text>
+              <Ionicons
+                name="moon-outline"
+                size={20}
+                color={Colors.primary}
+                style={styles.settingIconBox}
+              />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Dark Map Theme</Text>
-                <Text style={styles.settingDesc}>
-                  Use a darker map style for better visibility at night
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_dark_map')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_dark_map_desc')}</Text>
               </View>
             </View>
             <Switch
@@ -105,16 +116,14 @@ export default function SettingsScreen({ onBack }: Props) {
         </View>
 
         {/* ---- Tracking ---- */}
-        <Text style={styles.sectionLabel}>TRACKING</Text>
+        <Text style={styles.sectionLabel}>{t('settings_tracking')}</Text>
         <View style={[styles.card, Shadows.sm]}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>🚌</Text>
+              <Ionicons name="bus" size={20} color={Colors.primary} style={styles.settingIconBox} />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Live Jeepney Tracking</Text>
-                <Text style={styles.settingDesc}>
-                  Enable real-time jeepney position updates when tracking a route
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_live_tracking')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_live_tracking_desc')}</Text>
               </View>
             </View>
             <Switch
@@ -127,12 +136,15 @@ export default function SettingsScreen({ onBack }: Props) {
           <View style={styles.divider} />
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>🔔</Text>
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={Colors.primary}
+                style={styles.settingIconBox}
+              />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Notifications</Text>
-                <Text style={styles.settingDesc}>
-                  Get notified when a jeepney is approaching your stop
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_notifications')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_notifications_desc')}</Text>
               </View>
             </View>
             <Switch
@@ -145,21 +157,24 @@ export default function SettingsScreen({ onBack }: Props) {
         </View>
 
         {/* ---- Language ---- */}
-        <Text style={styles.sectionLabel}>LANGUAGE</Text>
+        <Text style={styles.sectionLabel}>{t('settings_language')}</Text>
         <View style={[styles.card, Shadows.sm]}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingIcon}>🌐</Text>
+              <Ionicons
+                name="globe-outline"
+                size={20}
+                color={Colors.primary}
+                style={styles.settingIconBox}
+              />
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Filipino / Tagalog</Text>
-                <Text style={styles.settingDesc}>
-                  Use Filipino labels for stops, buttons, and instructions
-                </Text>
+                <Text style={styles.settingTitle}>{t('settings_lang_toggle')}</Text>
+                <Text style={styles.settingDesc}>{t('settings_lang_desc')}</Text>
               </View>
             </View>
             <Switch
-              value={tagalog}
-              onValueChange={setTagalog}
+              value={language === 'bs'}
+              onValueChange={(v) => setLanguage(v ? 'bs' : 'en')}
               trackColor={{ true: Colors.primary, false: Colors.gray300 }}
               thumbColor={Colors.white}
             />
@@ -167,98 +182,94 @@ export default function SettingsScreen({ onBack }: Props) {
         </View>
 
         {/* ---- Suggestions ---- */}
-        <Text style={styles.sectionLabel}>SUGGESTIONS</Text>
+        <Text style={styles.sectionLabel}>{t('settings_suggestions')}</Text>
         <View style={[styles.card, Shadows.sm]}>
           <TouchableOpacity
             style={styles.suggestionRow}
             onPress={() =>
-              showInfo(
-                'Suggest a Route',
-                'Know a jeepney route that is not listed? Send us the route name, stops, and any details so we can add it to SakayNa!',
-              )
+              showInfo(t('settings_suggest_route_title'), t('settings_suggest_route_msg'))
             }
           >
-            <Text style={styles.settingIcon}>➕</Text>
+            <Ionicons
+              name="add-circle-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Suggest a New Route</Text>
-              <Text style={styles.settingDesc}>Help us add more jeepney routes to the app</Text>
+              <Text style={styles.settingTitle}>{t('settings_suggest_route')}</Text>
+              <Text style={styles.settingDesc}>{t('settings_suggest_route_desc')}</Text>
             </View>
             <View style={styles.chevron} />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.suggestionRow}
-            onPress={() =>
-              showInfo(
-                'Report Route Issue',
-                'If a route has incorrect stops, outdated information, or wrong coordinates, please let us know so we can fix it.',
-              )
-            }
+            onPress={() => showInfo(t('settings_report_title'), t('settings_report_msg'))}
           >
-            <Text style={styles.settingIcon}>⚠️</Text>
+            <Ionicons
+              name="warning-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Report Route Issue</Text>
-              <Text style={styles.settingDesc}>
-                Report wrong stops, outdated info, or incorrect route paths
-              </Text>
+              <Text style={styles.settingTitle}>{t('settings_report')}</Text>
+              <Text style={styles.settingDesc}>{t('settings_report_desc')}</Text>
             </View>
             <View style={styles.chevron} />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.suggestionRow}
-            onPress={() =>
-              showInfo(
-                'Feature Request',
-                "Have an idea to improve SakayNa? We'd love to hear it! Suggestions like fare calculator, trip planner, or favorite routes are welcome.",
-              )
-            }
+            onPress={() => showInfo(t('settings_feature_title'), t('settings_feature_msg'))}
           >
-            <Text style={styles.settingIcon}>💡</Text>
+            <Ionicons
+              name="bulb-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Request a Feature</Text>
-              <Text style={styles.settingDesc}>
-                Suggest new features like fare calculator, trip planner, or favorites
-              </Text>
+              <Text style={styles.settingTitle}>{t('settings_feature')}</Text>
+              <Text style={styles.settingDesc}>{t('settings_feature_desc')}</Text>
             </View>
             <View style={styles.chevron} />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.suggestionRow}
-            onPress={() =>
-              showInfo(
-                'Rate SakayNa',
-                'If you find SakayNa helpful, please rate us on the app store! Your feedback helps us improve.',
-              )
-            }
+            onPress={() => showInfo(t('settings_rate_title'), t('settings_rate_msg'))}
           >
-            <Text style={styles.settingIcon}>⭐</Text>
+            <Ionicons
+              name="star-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Rate SakayNa</Text>
-              <Text style={styles.settingDesc}>
-                Love the app? Give us a rating to help other commuters find us
-              </Text>
+              <Text style={styles.settingTitle}>{t('settings_rate')}</Text>
+              <Text style={styles.settingDesc}>{t('settings_rate_desc')}</Text>
             </View>
             <View style={styles.chevron} />
           </TouchableOpacity>
         </View>
 
         {/* ---- About ---- */}
-        <Text style={styles.sectionLabel}>ABOUT</Text>
+        <Text style={styles.sectionLabel}>{t('settings_about')}</Text>
         <View style={[styles.card, Shadows.sm]}>
           <TouchableOpacity
             style={styles.suggestionRow}
-            onPress={() =>
-              showInfo(
-                'About SakayNa',
-                'SakayNa is a jeepney transit tracker for Davao City. It helps commuters find routes, track jeepneys, and navigate the city.\n\nRoute data sourced from commutedavao.com\n\nVersion 1.0.0',
-              )
-            }
+            onPress={() => showInfo(t('settings_about_sakayna'), t('settings_about_msg'))}
           >
-            <Text style={styles.settingIcon}>ℹ️</Text>
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>About SakayNa</Text>
+              <Text style={styles.settingTitle}>{t('settings_about_sakayna')}</Text>
               <Text style={styles.settingDesc}>Version 1.0.0</Text>
             </View>
             <View style={styles.chevron} />
@@ -266,16 +277,16 @@ export default function SettingsScreen({ onBack }: Props) {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.suggestionRow}
-            onPress={() =>
-              showInfo(
-                'Data Source',
-                'Jeepney route data is sourced from commutedavao.com, an open-source project by Tatskiee that maps Davao City jeepney routes using OSRM and Leaflet.\n\nGitHub: github.com/Tatskiee/Commutedavao',
-              )
-            }
+            onPress={() => showInfo(t('settings_data_source'), t('settings_data_source_msg'))}
           >
-            <Text style={styles.settingIcon}>📊</Text>
+            <Ionicons
+              name="analytics-outline"
+              size={20}
+              color={Colors.primary}
+              style={styles.settingIconBox}
+            />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Data Source</Text>
+              <Text style={styles.settingTitle}>{t('settings_data_source')}</Text>
               <Text style={styles.settingDesc}>commutedavao.com</Text>
             </View>
             <View style={styles.chevron} />
@@ -360,6 +371,10 @@ const styles = StyleSheet.create({
   },
   settingIcon: {
     fontSize: 20,
+    width: 28,
+    textAlign: 'center',
+  },
+  settingIconBox: {
     width: 28,
     textAlign: 'center',
   },

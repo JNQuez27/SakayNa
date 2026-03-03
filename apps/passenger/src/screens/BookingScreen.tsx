@@ -9,9 +9,11 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
 import type { JeepneyRoute } from '../data/routes';
 import LeafletMap, { LeafletMapRef, MapRoute, MapMarker } from '../components/LeafletMap';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function BookingScreen({ route, onTrack, onBack }: Props) {
+  const { t } = useLanguage();
   const slideUp = useRef(new Animated.Value(80)).current;
   const slideOpacity = useRef(new Animated.Value(0)).current;
   const confirmScale = useRef(new Animated.Value(1)).current;
@@ -91,7 +94,7 @@ export default function BookingScreen({ route, onTrack, onBack }: Props) {
 
         {/* Back button */}
         <TouchableOpacity style={[styles.backBtn, Shadows.md]} onPress={onBack}>
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -126,27 +129,29 @@ export default function BookingScreen({ route, onTrack, onBack }: Props) {
           {/* Route info */}
           <View style={[styles.infoCard, Shadows.sm]}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>🕐</Text>
-              <Text style={styles.infoLabel}>Dalas</Text>
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoLabel}>{t('booking_frequency')}</Text>
               <Text style={styles.infoValue}>{route.frequency}</Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>📍</Text>
-              <Text style={styles.infoLabel}>Mga Hintayan</Text>
+              <Ionicons name="location-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoLabel}>{t('booking_stops_count')}</Text>
               <Text style={styles.infoValue}>{route.stops.length}</Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>🚌</Text>
-              <Text style={styles.infoLabel}>Status</Text>
-              <Text style={[styles.infoValue, { color: Colors.success }]}>Aktibo</Text>
+              <Ionicons name="bus" size={20} color={Colors.primary} />
+              <Text style={styles.infoLabel}>{t('booking_status')}</Text>
+              <Text style={[styles.infoValue, { color: Colors.success }]}>
+                {t('booking_active')}
+              </Text>
             </View>
           </View>
 
           {/* Stops list */}
           <View style={[styles.stopsCard, Shadows.sm]}>
-            <Text style={styles.stopsTitle}>Mga Hintayan ng Ruta</Text>
+            <Text style={styles.stopsTitle}>{t('booking_stops_title')}</Text>
             {route.stops.map((stop, idx) => (
               <View key={`stop-list-${idx}`} style={styles.stopRow}>
                 <View style={styles.stopLeft}>
@@ -173,10 +178,10 @@ export default function BookingScreen({ route, onTrack, onBack }: Props) {
                   <Text style={styles.stopName}>{stop.name}</Text>
                   <Text style={styles.stopType}>
                     {idx === 0
-                      ? 'Simula ng Ruta'
+                      ? t('booking_start')
                       : idx === route.stops.length - 1
-                        ? 'Dulo ng Ruta'
-                        : 'Hintayan'}
+                        ? t('booking_end')
+                        : t('booking_stop_label')}
                   </Text>
                 </View>
               </View>
@@ -193,11 +198,11 @@ export default function BookingScreen({ route, onTrack, onBack }: Props) {
               activeOpacity={1}
             >
               <View>
-                <Text style={styles.trackBtnTitle}>Subaybayan ang Jeepney</Text>
-                <Text style={styles.trackBtnSub}>Real-time tracking sa mapa</Text>
+                <Text style={styles.trackBtnTitle}>{t('booking_track_title')}</Text>
+                <Text style={styles.trackBtnSub}>{t('booking_track_sub')}</Text>
               </View>
               <View style={styles.trackBtnArrow}>
-                <Text style={styles.trackBtnArrowText}>→</Text>
+                <Ionicons name="arrow-forward" size={20} color={Colors.primaryDark} />
               </View>
             </TouchableOpacity>
           </Animated.View>

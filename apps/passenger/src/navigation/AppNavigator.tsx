@@ -41,7 +41,13 @@ export default function AppNavigator() {
         />
       );
     case 'tracking':
-      return <TrackingScreen route={selectedRoute!} onStop={() => setScreen('home')} />;
+      return (
+        <TrackingScreen
+          route={selectedRoute!}
+          onStop={() => setScreen('home')}
+          onBack={() => setScreen('booking')}
+        />
+      );
     case 'settings':
       return <SettingsScreen onBack={() => setScreen('home')} />;
     default:

@@ -9,18 +9,22 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
 import type { JeepneyRoute } from '../data/routes';
 import LeafletMap, { LeafletMapRef, MapRoute, MapMarker } from '../components/LeafletMap';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
 interface Props {
   route: JeepneyRoute;
   onStop?: () => void;
+  onBack?: () => void;
 }
 
-export default function TrackingScreen({ route, onStop }: Props) {
+export default function TrackingScreen({ route, onStop, onBack }: Props) {
+  const { t } = useLanguage();
   const [jeepneyIndex, setJeepneyIndex] = useState(0);
   const [nearestStop, setNearestStop] = useState(route.stops[0]?.name || '');
   const slideUp = useRef(new Animated.Value(100)).current;
@@ -129,7 +133,7 @@ export default function TrackingScreen({ route, onStop }: Props) {
       latitude: route.coordinates[0].latitude,
       longitude: route.coordinates[0].longitude,
       title: `Jeepney ${route.code}`,
-      emoji: '🚌',
+      emoji: 'bus',
     },
   ];
 
@@ -151,9 +155,14 @@ export default function TrackingScreen({ route, onStop }: Props) {
         <Animated.View style={[styles.etaChip, Shadows.md, { opacity: etaOpacity }]}>
           <View style={styles.etaDot} />
           <Text style={styles.etaText}>
-            Malapit sa: <Text style={styles.etaBold}>{nearestStop}</Text>
+            {t('tracking_near')}: <Text style={styles.etaBold}>{nearestStop}</Text>
           </Text>
         </Animated.View>
+
+        {/* Back button */}
+        <TouchableOpacity style={[styles.backBtn, Shadows.md]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Bottom panel */}
@@ -174,10 +183,10 @@ export default function TrackingScreen({ route, onStop }: Props) {
           <View style={styles.statusHeader}>
             <View style={styles.statusBadge}>
               <View style={styles.statusPulse} />
-              <Text style={styles.statusText}>Live Tracking</Text>
+              <Text style={styles.statusText}>{t('tracking_live')}</Text>
             </View>
             <Text style={styles.statusSub}>
-              Ruta {route.code}: {route.name}
+              {t('tracking_route')} {route.code}: {route.name}
             </Text>
           </View>
 
@@ -185,12 +194,15 @@ export default function TrackingScreen({ route, onStop }: Props) {
           <View style={[styles.jeepneyCard, Shadows.sm]}>
             <View style={styles.jeepneyLeft}>
               <View style={[styles.jeepneyAvatar, { backgroundColor: route.color }]}>
-                <Text style={styles.jeepneyAvatarText}>🚌</Text>
+                <Ionicons name="bus" size={24} color={Colors.white} />
               </View>
               <View>
                 <Text style={styles.jeepneyName}>Jeepney {route.code}</Text>
                 <Text style={styles.jeepneyRoute}>{route.name}</Text>
-                <Text style={styles.jeepneyStatus}>🟢 Aktibong bumabiyahe</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="ellipse" size={8} color={Colors.success} />
+                  <Text style={styles.jeepneyStatus}>{t('tracking_active_label')}</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -198,27 +210,29 @@ export default function TrackingScreen({ route, onStop }: Props) {
           {/* Trip info */}
           <View style={[styles.tripInfoCard, Shadows.sm]}>
             <View style={styles.tripInfoItem}>
-              <Text style={styles.tripInfoIcon}>📍</Text>
-              <Text style={styles.tripInfoLabel}>Mga Hintayan</Text>
+              <Ionicons name="location-outline" size={20} color={Colors.primary} />
+              <Text style={styles.tripInfoLabel}>{t('tracking_info_stops')}</Text>
               <Text style={styles.tripInfoValue}>{route.stops.length}</Text>
             </View>
             <View style={styles.tripInfoDivider} />
             <View style={styles.tripInfoItem}>
-              <Text style={styles.tripInfoIcon}>🕐</Text>
-              <Text style={styles.tripInfoLabel}>Dalas</Text>
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <Text style={styles.tripInfoLabel}>{t('tracking_info_freq')}</Text>
               <Text style={styles.tripInfoValue}>{route.frequency}</Text>
             </View>
             <View style={styles.tripInfoDivider} />
             <View style={styles.tripInfoItem}>
-              <Text style={styles.tripInfoIcon}>🚌</Text>
-              <Text style={styles.tripInfoLabel}>Status</Text>
-              <Text style={[styles.tripInfoValue, { color: Colors.success }]}>Aktibo</Text>
+              <Ionicons name="bus" size={20} color={Colors.primary} />
+              <Text style={styles.tripInfoLabel}>{t('tracking_info_status')}</Text>
+              <Text style={[styles.tripInfoValue, { color: Colors.success }]}>
+                {t('tracking_active')}
+              </Text>
             </View>
           </View>
 
           {/* Stops progress */}
           <View style={[styles.stopsCard, Shadows.sm]}>
-            <Text style={styles.stopsTitle}>Mga Hintayan sa Ruta</Text>
+            <Text style={styles.stopsTitle}>{t('tracking_stops_title')}</Text>
             {route.stops.map((stop, idx) => (
               <View key={`step-${idx}`} style={styles.stepRow}>
                 <View style={styles.stepLeft}>
@@ -235,11 +249,25 @@ export default function TrackingScreen({ route, onStop }: Props) {
                     ]}
                   >
                     {nearestStop === stop.name ? (
-                      <Text style={styles.stepActiveIcon}>●</Text>
+                      <Ionicons name="radio-button-on" size={10} color={Colors.primary} />
                     ) : (
-                      <Text style={styles.stepIcon}>
-                        {idx === 0 ? '🟢' : idx === route.stops.length - 1 ? '🔴' : '○'}
-                      </Text>
+                      <Ionicons
+                        name={
+                          idx === 0
+                            ? 'ellipse'
+                            : idx === route.stops.length - 1
+                              ? 'ellipse'
+                              : 'ellipse-outline'
+                        }
+                        size={10}
+                        color={
+                          idx === 0
+                            ? Colors.success
+                            : idx === route.stops.length - 1
+                              ? Colors.error
+                              : Colors.gray400
+                        }
+                      />
                     )}
                   </View>
                   {idx < route.stops.length - 1 && (
@@ -257,7 +285,7 @@ export default function TrackingScreen({ route, onStop }: Props) {
 
           {/* Stop tracking */}
           <TouchableOpacity style={styles.stopBtn} onPress={onStop}>
-            <Text style={styles.stopBtnText}>Itigil ang Tracking</Text>
+            <Text style={styles.stopBtnText}>{t('tracking_stop_btn')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Animated.View>
@@ -316,6 +344,22 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeights.medium,
   },
   etaBold: {
+    color: Colors.primary,
+    fontWeight: Typography.fontWeights.bold,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: 52,
+    left: Spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: Typography.fontSizes.xl,
     color: Colors.primary,
     fontWeight: Typography.fontWeights.bold,
   },

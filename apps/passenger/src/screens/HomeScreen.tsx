@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../i18n/LanguageContext';
 import { JEEPNEY_ROUTES, DAVAO_CENTER } from '../data/routes';
 import type { JeepneyRoute } from '../data/routes';
 import LeafletMap, { LeafletMapRef, MapRoute, MapMarker } from '../components/LeafletMap';
@@ -28,10 +30,10 @@ const SHEET_MAX = height - HEADER_HEIGHT - 30;
 
 type MapType = 'default' | 'satellite' | 'terrain';
 
-const MAP_TYPE_OPTIONS: { key: MapType; label: string; icon: string }[] = [
-  { key: 'default', label: 'Default', icon: '🗺️' },
-  { key: 'satellite', label: 'Satellite', icon: '🛰️' },
-  { key: 'terrain', label: 'Terrain', icon: '⛰️' },
+const MAP_TYPE_OPTIONS: { key: MapType; label: string; iconName: string }[] = [
+  { key: 'default', label: 'Default', iconName: 'map-outline' },
+  { key: 'satellite', label: 'Satellite', iconName: 'planet-outline' },
+  { key: 'terrain', label: 'Terrain', iconName: 'trail-sign-outline' },
 ];
 
 export default function HomeScreen({
@@ -43,6 +45,7 @@ export default function HomeScreen({
   onSettings?: () => void;
   onLogout?: () => void;
 }) {
+  const { t } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [locationReady, setLocationReady] = useState(false);
   const [userLoc, setUserLoc] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -182,7 +185,30 @@ export default function HomeScreen({
       r.name.toLowerCase().includes(searchText.toLowerCase()) ||
       r.code.toLowerCase().includes(searchText.toLowerCase()) ||
       r.stops.some((s) => s.name.toLowerCase().includes(searchText.toLowerCase())),
-  );
+  ).sort((a, b) => {
+    if (!userLoc) return 0;
+    const distToRoute = (route: JeepneyRoute) => {
+      let min = Infinity;
+      route.stops.forEach((s) => {
+        const d = Math.sqrt(
+          Math.pow(s.latitude - userLoc.latitude, 2) + Math.pow(s.longitude - userLoc.longitude, 2),
+        );
+        if (d < min) min = d;
+      });
+      return min;
+    };
+    return distToRoute(a) - distToRoute(b);
+  });
+
+  const isRouteNearby = (route: JeepneyRoute): boolean => {
+    if (!userLoc) return false;
+    return route.stops.some((s) => {
+      const d = Math.sqrt(
+        Math.pow(s.latitude - userLoc.latitude, 2) + Math.pow(s.longitude - userLoc.longitude, 2),
+      );
+      return d < 0.01;
+    });
+  };
 
   // ---------- map data ----------
   const mapRoutes: MapRoute[] = JEEPNEY_ROUTES.map((r) => ({
@@ -208,8 +234,8 @@ export default function HomeScreen({
       {/* -------- Fixed header -------- */}
       <Animated.View style={[styles.topBar, { opacity: headerOpacity }]}>
         <View>
-          <Text style={styles.greeting}>Magandang araw! 👋</Text>
-          <Text style={styles.userName}>Pasahero</Text>
+          <Text style={styles.greeting}>{t('home_greeting')}</Text>
+          <Text style={styles.userName}>{t('home_user')}</Text>
         </View>
         <View>
           <TouchableOpacity style={styles.avatarBtn} onPress={() => setShowProfileMenu(true)}>
@@ -234,8 +260,8 @@ export default function HomeScreen({
                 <Text style={styles.profileMenuInitials}>SN</Text>
               </View>
               <View>
-                <Text style={styles.profileMenuName}>SakayNa User</Text>
-                <Text style={styles.profileMenuSub}>Pasahero</Text>
+                <Text style={styles.profileMenuName}>{t('home_profile_name')}</Text>
+                <Text style={styles.profileMenuSub}>{t('home_profile_sub')}</Text>
               </View>
             </View>
             <View style={styles.profileMenuDivider} />
@@ -246,8 +272,8 @@ export default function HomeScreen({
                 onSettings?.();
               }}
             >
-              <Text style={styles.profileMenuIcon}>⚙️</Text>
-              <Text style={styles.profileMenuLabel}>Settings</Text>
+              <Ionicons name="settings-outline" size={18} color={Colors.gray700} />
+              <Text style={styles.profileMenuLabel}>{t('home_settings')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.profileMenuItem}
@@ -256,8 +282,8 @@ export default function HomeScreen({
                 onLogout?.();
               }}
             >
-              <Text style={styles.profileMenuIcon}>🚪</Text>
-              <Text style={styles.profileMenuLabel}>Logout</Text>
+              <Ionicons name="log-out-outline" size={18} color={Colors.gray700} />
+              <Text style={styles.profileMenuLabel}>{t('home_logout')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -284,22 +310,30 @@ export default function HomeScreen({
           onPress={() => setShowMapTypeMenu(!showMapTypeMenu)}
           activeOpacity={0.8}
         >
-          <Text style={styles.mapTypeFabIcon}>
-            {MAP_TYPE_OPTIONS.find((o) => o.key === mapType)?.icon || '🗺️'}
-          </Text>
+          <Ionicons
+            name={
+              (MAP_TYPE_OPTIONS.find((o) => o.key === mapType)?.iconName as any) || 'map-outline'
+            }
+            size={20}
+            color={Colors.primary}
+          />
         </TouchableOpacity>
 
         {/* Map type dropdown */}
         {showMapTypeMenu && (
           <View style={[styles.mapTypeDropdown, Shadows.lg]}>
-            <Text style={styles.mapTypeTitle}>Map Type</Text>
+            <Text style={styles.mapTypeTitle}>{t('home_map_type')}</Text>
             {MAP_TYPE_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.key}
                 style={[styles.mapTypeOption, mapType === opt.key && styles.mapTypeOptionActive]}
                 onPress={() => handleMapTypeChange(opt.key)}
               >
-                <Text style={styles.mapTypeOptionIcon}>{opt.icon}</Text>
+                <Ionicons
+                  name={opt.iconName as any}
+                  size={18}
+                  color={mapType === opt.key ? Colors.primary : Colors.gray600}
+                />
                 <Text
                   style={[
                     styles.mapTypeOptionLabel,
@@ -319,7 +353,11 @@ export default function HomeScreen({
           onPress={handleLocateMe}
           activeOpacity={0.8}
         >
-          <Text style={styles.locateMeIcon}>{locationReady ? '📍' : '◎'}</Text>
+          <Ionicons
+            name={locationReady ? 'locate-outline' : 'locate'}
+            size={22}
+            color={Colors.primary}
+          />
         </TouchableOpacity>
       </View>
 
@@ -329,7 +367,7 @@ export default function HomeScreen({
         <View {...panResponder.panHandlers} style={styles.handleZone}>
           <View style={styles.handle} />
           <Text style={styles.handleHint}>
-            {locationReady ? 'I-swipe pataas para sa mga ruta' : 'Mga Ruta ng Jeepney'}
+            {locationReady ? t('home_swipe_hint') : t('home_routes_label')}
           </Text>
         </View>
 
@@ -347,10 +385,10 @@ export default function HomeScreen({
               searchText ? { borderColor: Colors.primary } : null,
             ]}
           >
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Ionicons name="search-outline" size={16} color={Colors.gray400} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Hanapin ang ruta o hintayan..."
+              placeholder={t('home_search')}
               placeholderTextColor={Colors.gray400}
               selectionColor={Colors.primary}
               value={searchText}
@@ -365,8 +403,10 @@ export default function HomeScreen({
 
           {/* Route cards */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Mga Ruta ng Jeepney</Text>
-            <Text style={styles.sectionCount}>{filteredRoutes.length} ruta</Text>
+            <Text style={styles.sectionTitle}>{t('home_routes_title')}</Text>
+            <Text style={styles.sectionCount}>
+              {t('home_routes_count', { count: filteredRoutes.length })}
+            </Text>
           </View>
           {filteredRoutes.map((route) => {
             const firstStop = route.stops[0]?.name || '';
@@ -387,6 +427,14 @@ export default function HomeScreen({
                     <Text style={styles.routeName} numberOfLines={1}>
                       {route.name}
                     </Text>
+                    {isRouteNearby(route) && (
+                      <View style={styles.nearbyBadge}>
+                        <Ionicons name="navigate" size={10} color={Colors.primary} />
+                        <Text style={{ fontSize: 10, color: Colors.primary, fontWeight: '600' }}>
+                          {t('home_nearby')}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   <Text style={styles.routeDesc} numberOfLines={1}>
                     {route.description}
@@ -407,8 +455,16 @@ export default function HomeScreen({
                     </View>
                   </View>
                   <View style={styles.routeMeta}>
-                    <Text style={styles.routeFreq}>🕐 {route.frequency}</Text>
-                    <Text style={styles.routeStops}>📍 {route.stops.length} hintayan</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Ionicons name="time-outline" size={13} color={Colors.gray500} />
+                      <Text style={styles.routeFreq}>{route.frequency}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Ionicons name="location-outline" size={13} color={Colors.gray500} />
+                      <Text style={styles.routeStops}>
+                        {t('home_stops_count', { count: route.stops.length })}
+                      </Text>
+                    </View>
                   </View>
                 </View>
                 <View style={styles.routeChevronBox}>
@@ -420,8 +476,8 @@ export default function HomeScreen({
 
           {filteredRoutes.length === 0 && (
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyIcon}>🔎</Text>
-              <Text style={styles.emptyText}>Walang nahanap na ruta</Text>
+              <Ionicons name="search" size={36} color={Colors.gray300} />
+              <Text style={styles.emptyText}>{t('home_no_results')}</Text>
             </View>
           )}
         </ScrollView>
@@ -718,6 +774,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    flexWrap: 'wrap',
+  },
+  nearbyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.primary + '18',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
   },
   routeCodeBadge: {
     paddingHorizontal: 8,

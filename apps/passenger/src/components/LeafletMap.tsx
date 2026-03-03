@@ -144,7 +144,17 @@ function generateHTML(props: Props): string {
   });
 
   /* ---- draw markers ---- */
+  var ICON_SVG = {
+    person: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 512 512"><path fill="white" d="M256 112a56 56 0 1 0-56-56 56 56 0 0 0 56 56zm0 48c-44.18 0-80 35.82-80 80v120a16 16 0 0 0 16 16h16v96a32 32 0 0 0 32 32h32a32 32 0 0 0 32-32v-96h16a16 16 0 0 0 16-16V240c0-44.18-35.82-80-80-80z"/></svg>',
+    bus: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 512 512"><path fill="white" d="M400 32H112C85.49 32 64 53.49 64 80v288c0 17.67 14.33 32 32 32h16v48a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-48h160v48a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-48h16c17.67 0 32-14.33 32-32V80c0-26.51-21.49-48-48-48zM160 384a24 24 0 1 1 24-24 24 24 0 0 1-24 24zm192 0a24 24 0 1 1 24-24 24 24 0 0 1-24 24zm48-128H112V112h288z"/></svg>'
+  };
   function makeIcon(color,emoji){
+    if(emoji && ICON_SVG[emoji]){
+      return L.divIcon({
+        html:'<div style="width:30px;height:30px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.35);border:2px solid white;">'+ICON_SVG[emoji]+'</div>',
+        iconSize:[30,30],iconAnchor:[15,30],className:''
+      });
+    }
     if(emoji){
       return L.divIcon({
         html:'<div style="font-size:24px;text-align:center;line-height:32px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.3));">'+emoji+'</div>',

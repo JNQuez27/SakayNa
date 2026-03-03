@@ -10,6 +10,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,31 +19,36 @@ interface Props {
   onFinish: () => void;
 }
 
+const SLIDE_ICONS: { name: string; size: number }[] = [
+  { name: 'bus', size: 64 },
+  { name: 'location', size: 64 },
+  { name: 'star', size: 64 },
+];
+
 const slides = [
   {
     id: '1',
-    icon: '�',
-    title: 'Piliin ang\nRuta',
-    subtitle: 'Piliin ang ruta ng jeepney\nna gusto mong sakyan.',
-
+    iconIdx: 0,
+    titleKey: 'onboard_1_title',
+    subtitleKey: 'onboard_1_sub',
     accent: Colors.secondary,
     bg: Colors.backgroundLight,
     iconBg: Colors.primary,
   },
   {
     id: '2',
-    icon: '📍',
-    title: 'Real-Time\nTracking',
-    subtitle: 'Subaybayan ang jeepney\nsa mapa nang live.',
+    iconIdx: 1,
+    titleKey: 'onboard_2_title',
+    subtitleKey: 'onboard_2_sub',
     accent: Colors.primaryLight,
     bg: '#EBF5FB',
     iconBg: Colors.secondary,
   },
   {
     id: '3',
-    icon: '⭐',
-    title: 'Safe &\nAffordable',
-    subtitle: 'Ang ligtas at abot-kayang\nsakay para sa lahat.',
+    iconIdx: 2,
+    titleKey: 'onboard_3_title',
+    subtitleKey: 'onboard_3_sub',
     accent: Colors.primary,
     bg: Colors.backgroundLight,
     iconBg: Colors.primaryDark,
@@ -49,6 +56,7 @@ const slides = [
 ];
 
 export default function OnboardingScreen({ onFinish }: Props) {
+  const { t } = useLanguage();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -75,7 +83,7 @@ export default function OnboardingScreen({ onFinish }: Props) {
 
       {/* Skip */}
       <TouchableOpacity style={styles.skipBtn} onPress={onFinish}>
-        <Text style={styles.skipText}>Laktawan</Text>
+        <Text style={styles.skipText}>{t('onboard_skip')}</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -100,7 +108,11 @@ export default function OnboardingScreen({ onFinish }: Props) {
             <View style={styles.iconWrapper}>
               <View style={[styles.iconCardOuter, Shadows.lg]}>
                 <View style={[styles.iconCardInner, { backgroundColor: slide.iconBg }]}>
-                  <Text style={styles.slideIcon}>{slide.icon}</Text>
+                  <Ionicons
+                    name={SLIDE_ICONS[slide.iconIdx].name as any}
+                    size={SLIDE_ICONS[slide.iconIdx].size}
+                    color={Colors.white}
+                  />
                 </View>
               </View>
               {/* Floating badge */}
@@ -111,8 +123,8 @@ export default function OnboardingScreen({ onFinish }: Props) {
 
             {/* Text */}
             <View style={styles.textBlock}>
-              <Text style={styles.slideTitle}>{slide.title}</Text>
-              <Text style={styles.slideSubtitle}>{slide.subtitle}</Text>
+              <Text style={styles.slideTitle}>{t(slide.titleKey)}</Text>
+              <Text style={styles.slideSubtitle}>{t(slide.subtitleKey)}</Text>
               <View style={[styles.accentLine, { backgroundColor: slide.accent }]} />
             </View>
           </View>
@@ -157,7 +169,7 @@ export default function OnboardingScreen({ onFinish }: Props) {
             activeOpacity={1}
           >
             <Text style={styles.ctaText}>
-              {activeIndex < slides.length - 1 ? 'Susunod →' : 'Magsimula'}
+              {activeIndex < slides.length - 1 ? `${t('onboard_next')} →` : t('onboard_start')}
             </Text>
           </TouchableOpacity>
         </Animated.View>
@@ -165,7 +177,8 @@ export default function OnboardingScreen({ onFinish }: Props) {
         {/* Login link */}
         <TouchableOpacity onPress={onFinish} style={styles.loginLink}>
           <Text style={styles.loginLinkText}>
-            May account na? <Text style={styles.loginLinkBold}>Mag-login</Text>
+            {t('onboard_login_prompt')}{' '}
+            <Text style={styles.loginLinkBold}>{t('onboard_login_link')}</Text>
           </Text>
         </TouchableOpacity>
       </View>

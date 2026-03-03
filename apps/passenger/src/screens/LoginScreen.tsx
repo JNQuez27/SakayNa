@@ -12,6 +12,8 @@ import {
   Platform,
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export default function LoginScreen({ onFinish }: Props) {
+  const { t } = useLanguage();
   const [phone, setPhone] = useState('');
   const [focused, setFocused] = useState(false);
   const logoScale = useRef(new Animated.Value(0.8)).current;
@@ -72,12 +75,12 @@ export default function LoginScreen({ onFinish }: Props) {
           style={[styles.logoBox, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}
         >
           <View style={[styles.logoCard, Shadows.lg]}>
-            <Text style={styles.logoIcon}>🚌</Text>
+            <Ionicons name="bus" size={40} color={Colors.primary} />
           </View>
           <Text style={styles.brandName}>
             Sakay<Text style={styles.brandAccent}>Na</Text>
           </Text>
-          <Text style={styles.brandSub}>Ang iyong maaasahang sakay</Text>
+          <Text style={styles.brandSub}>{t('splash_tagline')}</Text>
         </Animated.View>
       </View>
 
@@ -89,8 +92,8 @@ export default function LoginScreen({ onFinish }: Props) {
           { opacity: formOpacity, transform: [{ translateY: formTranslate }] },
         ]}
       >
-        <Text style={styles.formTitle}>Mag-login</Text>
-        <Text style={styles.formSub}>Ilagay ang iyong phone number para makapasok.</Text>
+        <Text style={styles.formTitle}>{t('login_title')}</Text>
+        <Text style={styles.formSub}>{t('login_subtitle')}</Text>
 
         <View style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}>
           <Text style={styles.inputPrefix}>+63</Text>
@@ -114,25 +117,23 @@ export default function LoginScreen({ onFinish }: Props) {
           onPress={phone.length >= 10 ? onFinish : undefined}
           activeOpacity={0.8}
         >
-          <Text style={styles.loginBtnText}>Magpatuloy</Text>
+          <Text style={styles.loginBtnText}>{t('login_button')}</Text>
           <Text style={styles.loginBtnArrow}>→</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>o</Text>
+          <Text style={styles.dividerText}>{t('login_or')}</Text>
           <View style={styles.dividerLine} />
         </View>
 
         <TouchableOpacity style={styles.guestBtn} onPress={onFinish}>
-          <Text style={styles.guestBtnText}>Magpatuloy bilang Bisita</Text>
+          <Text style={styles.guestBtnText}>{t('login_guest')}</Text>
         </TouchableOpacity>
       </Animated.View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Sa pag-login, sumasang-ayon ka sa aming Terms of Service
-        </Text>
+        <Text style={styles.footerText}>{t('login_footer')}</Text>
       </View>
     </KeyboardAvoidingView>
   );
